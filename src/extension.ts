@@ -1,26 +1,117 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "mikco" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('mikco.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from lyricz!');
-	});
-
-	context.subscriptions.push(disposable);
+interface LyricsResponse {
+    lyrics: string;
 }
 
-// This method is called when your extension is deactivated
+export function activate(context: vscode.ExtensionContext) {
+    let disposable = vscode.commands.registerCommand('extension.getLyrics', async () => {
+        const fetchModule = await import('node-fetch');
+        const fetch = fetchModule.default;
+
+        const panel = vscode.window.createWebviewPanel(
+            'lyricsPanel', 
+            'Song Lyrics', 
+            vscode.ViewColumn.One, 
+            { enableScripts: true } 
+        );
+
+        panel.webview.html = getWebviewContent();
+
+        panel.webview.onDidReceiveMessage(
+            async (message) => { 
+                if (message.command === 'searchLyrics') {
+                    const { songTitle, artist } = message;
+                    try {
+                        const response = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(songTitle)}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                       const data = await response.json() as LyricsResponse;
+                        if (data.lyrics) {
+                            panel.webview.postMessage({ command: 'displayLyrics', lyrics: data.lyrics });
+                        } else {
+                            panel.webview.postMessage({ command: 'displayLyrics', lyrics: 'Lyrics not found!' });
+                        }
+                    } catch (error) {
+                        console.error('Error fetching lyrics:', error);
+                        panel.webview.postMessage({ command: 'displayLyrics', lyrics: 'Error fetching lyrics.' });
+                    }
+                }
+            },
+            undefined,
+            context.subscriptions
+        );
+    });
+
+    context.subscriptions.push(disposable);
+}
+
 export function deactivate() {}
+
+function getWebviewContent() {
+    return `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lyrics Finder</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                padding: 10px;
+            }
+            #lyrics {
+                white-space: pre-wrap;
+                margin-top: 20px;
+            }
+            input, button {
+                padding: 10px;
+                margin: 5px;
+                font-size: 16px;
+            }
+            button {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #45a049;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Song Lyrics Finder</h1>
+        <input type="text" id="songTitle" placeholder="Song Title" />
+        <input type="text" id="artist" placeholder="Artist" />
+        <button id="searchButton">Search Lyrics</button>
+        <pre id="lyrics"></pre>
+
+        <script>
+            const vscode = acquireVsCodeApi();
+            document.getElementById('searchButton').addEventListener('click', () => {
+                const songTitle = document.getElementById('songTitle').value;
+                const artist = document.getElementById('artist').value;
+                
+                if (songTitle && artist) {
+                    vscode.postMessage({
+                        command: 'searchLyrics',
+                        songTitle: songTitle,
+                        artist: artist
+                    });
+                } else {
+                    document.getElementById('lyrics').innerText = 'Please provide both song title and artist.';
+                }
+            });
+
+            window.addEventListener('message', (event) => {
+                const message = event.data;
+                if (message.command === 'displayLyrics') {
+                    document.getElementById('lyrics').innerText = message.lyrics;
+                }
+            });
+        </script>
+    </body>
+    </html>`;
+}

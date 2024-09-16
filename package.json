@@ -1,12 +1,25 @@
 {
-  "name": "mikco",
+  "name": "lyricz",
   "displayName": "lyricz",
-  "description": "music lyrics in vscode",
+  "description": "Fetches and displays lyrics for your favorite songs right inside VSCode!",
   "version": "0.0.1",
+  "publisher": "mkco",
+  "keywords": [
+    "lyrics",
+    "music",
+    "vscode",
+    "editor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/your-repository"
+  },
   "engines": {
     "vscode": "^1.93.0"
   },
   "categories": [
+    "Extension Packs",
+    "Visualization",
     "Other"
   ],
   "activationEvents": [],

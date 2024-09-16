@@ -2,7 +2,7 @@
   "name": "lyricz",
   "displayName": "lyricz",
   "description": "Fetches and displays lyrics for your favorite songs right inside VSCode!",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "mkco",
   "author": "m_.kco",
   "license": "MIT",

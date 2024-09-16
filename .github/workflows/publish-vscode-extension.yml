@@ -30,6 +30,6 @@ jobs:
 
       - name: Publish extension
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSCE_PA: ${{ secrets.VSCE_PA }}
         run: |
           vsce publish --packagePath *.vsix

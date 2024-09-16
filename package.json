@@ -15,7 +15,7 @@
   "icon": "m_.kco.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/your-repository"
+    "url": "https://github.com/sunkenquest/lyricz"
   },
   "engines": {
     "vscode": "^1.93.0"
